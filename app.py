@@ -26,7 +26,7 @@ ADSENSE_PUBLISHER_ID = "ca-pub-9856228284451388"
 st.markdown(
     f"""
     <script async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER_ID}"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9856228284451388"
         crossorigin="anonymous">
     </script>
     """,
