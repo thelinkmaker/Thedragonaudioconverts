@@ -4,625 +4,249 @@ import asyncio
 import tempfile
 import os
 import re
-import streamlit.components.v1 as components
 
-# ============================================================
-# PAGE CONFIG
-# ============================================================
+st.set_page_config(page_title="The Dragon Audio Converts", page_icon="ðŸ‰", layout="centered")
 
-st.set_page_config(
-    page_title="The Dragon Audio Converts",
-    page_icon="🐉",
-    layout="centered"
-)
+st.markdown("""
+<style>
+.stApp { background: linear-gradient(160deg, #0a0000 0%, #1a0505 40%, #0d0000 100%); color: #ffcc00; }
+h1 { color: #ff4500 !important; text-shadow: 0 0 15px #ff0000, 0 0 30px #8b0000; text-align: center; font-family: 'Georgia', serif; letter-spacing: 2px; }
+h2, h3 { color: #ff8c00 !important; font-family: 'Georgia', serif; }
+p, label { color: #ffd700 !important; }
+section[data-testid="stSidebar"] { background: linear-gradient(180deg, #110000 0%, #000000 100%); border-right: 2px solid #8b0000; }
+.stButton > button { background: linear-gradient(90deg, #8b0000, #ff4500, #8b0000); color: #ffd700 !important; border: 2px solid #ffd700; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 8px; transition: all 0.3s ease; }
+.stButton > button:hover { background: linear-gradient(90deg, #ff4500, #ffd700, #ff4500); color: #000 !important; border-color: #ff4500; box-shadow: 0 0 20px #ff4500; }
+.stFileUploader { background: rgba(139, 0, 0, 0.15); border: 2px dashed #ff4500 !important; border-radius: 10px; padding: 20px; }
+.stFileUploader label { color: #ffd700 !important; font-weight: bold; }
+.stSelectbox div[data-baseweb="select"] { background-color: #1a0505; border: 1px solid #8b0000; border-radius: 8px; color: #ffd700; }
+.stTextArea textarea { background-color: #1a0505 !important; border: 1px solid #8b0000 !important; color: #ffd700 !important; }
+.stRadio label { color: #ffd700 !important; }
+.stProgress > div > div > div > div { background: linear-gradient(90deg, #8b0000, #ff4500, #ffd700); }
+.stSuccess { background-color: rgba(255, 215, 0, 0.1); color: #ffd700 !important; border: 1px solid #ffd700; }
+.stError { background-color: rgba(139, 0, 0, 0.2); color: #ff4500 !important; border: 1px solid #ff4500; }
+</style>
+""", unsafe_allow_html=True)
 
-# ============================================================
-# GOOGLE ADSENSE
-# ============================================================
+st.title("ðŸ‰ The Dragon Audio Converts")
+st.markdown("<h3 style='text-align: center; color: #ff8c00;'>Forge your text into golden audio. Unleash the fire of AI voices.</h3>", unsafe_allow_html=True)
+st.markdown("---")
 
-ADSENSE_PUBLISHER_ID = "ca-pub-9856228284451388"
-
-# Load Google AdSense
-st.markdown(
-    f"""
-    <script async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9856228284451388"
-        crossorigin="anonymous">
-    </script>
-    """,
-    unsafe_allow_html=True
-)
-
-# Your AdSense ad-unit slot ID.
-# Replace this after creating an AdSense ad unit.
-ADSENSE_AD_SLOT = "YOUR_REAL_AD_SLOT_ID"
-
-# ============================================================
-# CUSTOM CSS
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-
-    .stApp {
-        background:
-            radial-gradient(
-                circle at top,
-                rgba(75, 0, 130, 0.25),
-                transparent 35%
-            ),
-            linear-gradient(
-                180deg,
-                #080016 0%,
-                #120025 45%,
-                #050008 100%
-            );
-        color: white;
-    }
-
-    .dragon-title {
-        text-align: center;
-        font-size: 42px;
-        font-weight: 800;
-        margin-top: 10px;
-        margin-bottom: 5px;
-        color: #ffffff;
-    }
-
-    .dragon-subtitle {
-        text-align: center;
-        color: #cfc5df;
-        font-size: 16px;
-        margin-bottom: 25px;
-    }
-
-    .dragon-card {
-        background: rgba(255,255,255,0.055);
-        border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 18px;
-        padding: 22px;
-        margin: 15px 0;
-        backdrop-filter: blur(10px);
-    }
-
-    .dragon-ad-space {
-        min-height: 90px;
-        margin: 18px 0;
-    }
-
-    .result-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# ============================================================
-# HEADER
-# ============================================================
-
-st.markdown(
-    '<div class="dragon-title">🐉 The Dragon Audio Converts</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="dragon-subtitle">Convert your text and novels into natural-sounding MP3 audio.</div>',
-    unsafe_allow_html=True
-)
-
-# ============================================================
-# LANGUAGE / VOICE DATA
-# ============================================================
-
+# Language -> list of (display_name, voice_id)
 LANGUAGE_VOICES = {
-    "English (US)": {
-        "en-US-AriaNeural": "Aria",
-        "en-US-GuyNeural": "Guy",
-        "en-US-JennyNeural": "Jenny",
-    },
-
-    "English (UK)": {
-        "en-GB-SoniaNeural": "Sonia",
-        "en-GB-RyanNeural": "Ryan",
-    },
-
-    "English (Australia)": {
-        "en-AU-NatashaNeural": "Natasha",
-        "en-AU-WilliamNeural": "William",
-    },
-
-    "English (India)": {
-        "en-IN-NeerjaNeural": "Neerja",
-        "en-IN-PrabhatNeural": "Prabhat",
-    },
-
-    "Hindi": {
-        "hi-IN-SwaraNeural": "Swara",
-        "hi-IN-MadhurNeural": "Madhur",
-    },
-
-    "Urdu": {
-        "ur-PK-AsadNeural": "Asad",
-        "ur-PK-UzmaNeural": "Uzma",
-    },
-
-    "Spanish (Spain)": {
-        "es-ES-ElviraNeural": "Elvira",
-        "es-ES-AlvaroNeural": "Alvaro",
-    },
-
-    "Spanish (Mexico)": {
-        "es-MX-DaliaNeural": "Dalia",
-        "es-MX-JorgeNeural": "Jorge",
-    },
-
-    "French": {
-        "fr-FR-DeniseNeural": "Denise",
-        "fr-FR-HenriNeural": "Henri",
-    },
-
-    "German": {
-        "de-DE-KatjaNeural": "Katja",
-        "de-DE-ConradNeural": "Conrad",
-    },
-
-    "Italian": {
-        "it-IT-ElsaNeural": "Elsa",
-        "it-IT-DiegoNeural": "Diego",
-    },
-
-    "Portuguese (Brazil)": {
-        "pt-BR-FranciscaNeural": "Francisca",
-        "pt-BR-AntonioNeural": "Antonio",
-    },
-
-    "Arabic": {
-        "ar-SA-ZariyahNeural": "Zariyah",
-        "ar-SA-HamedNeural": "Hamed",
-    },
-
-    "Chinese (Mandarin)": {
-        "zh-CN-XiaoxiaoNeural": "Xiaoxiao",
-        "zh-CN-YunxiNeural": "Yunxi",
-    },
-
-    "Japanese": {
-        "ja-JP-NanamiNeural": "Nanami",
-        "ja-JP-KeitaNeural": "Keita",
-    },
-
-    "Russian": {
-        "ru-RU-SvetlanaNeural": "Svetlana",
-        "ru-RU-DmitryNeural": "Dmitry",
-    }
+    "English (US)": [
+        ("Aria (Female)", "en-US-AriaNeural"),
+        ("Guy (Male)", "en-US-GuyNeural"),
+        ("Jenny (Female)", "en-US-JennyNeural"),
+        ("Christopher (Male)", "en-US-ChristopherNeural"),
+    ],
+    "English (UK)": [
+        ("Sonia (Female)", "en-GB-SoniaNeural"),
+        ("Ryan (Male)", "en-GB-RyanNeural"),
+    ],
+    "English (Australia)": [
+        ("Natasha (Female)", "en-AU-NatashaNeural"),
+        ("William (Male)", "en-AU-WilliamNeural"),
+    ],
+    "English (India)": [
+        ("Neerja (Female)", "en-IN-NeerjaNeural"),
+        ("Prabhat (Male)", "en-IN-PrabhatNeural"),
+    ],
+    "Hindi": [
+        ("Swara (Female)", "hi-IN-SwaraNeural"),
+        ("Madhur (Male)", "hi-IN-MadhurNeural"),
+    ],
+    "Urdu": [
+        ("Uzma (Female)", "ur-PK-UzmaNeural"),
+        ("Asad (Male)", "ur-PK-AsadNeural"),
+    ],
+    "Spanish (Spain)": [
+        ("Elvira (Female)", "es-ES-ElviraNeural"),
+        ("Alvaro (Male)", "es-ES-AlvaroNeural"),
+    ],
+    "Spanish (Mexico)": [
+        ("Dalia (Female)", "es-MX-DaliaNeural"),
+        ("Jorge (Male)", "es-MX-JorgeNeural"),
+    ],
+    "French": [
+        ("Denise (Female)", "fr-FR-DeniseNeural"),
+        ("Henri (Male)", "fr-FR-HenriNeural"),
+    ],
+    "German": [
+        ("Katja (Female)", "de-DE-KatjaNeural"),
+        ("Conrad (Male)", "de-DE-ConradNeural"),
+    ],
+    "Italian": [
+        ("Elsa (Female)", "it-IT-ElsaNeural"),
+        ("Diego (Male)", "it-IT-DiegoNeural"),
+    ],
+    "Portuguese (Brazil)": [
+        ("Francisca (Female)", "pt-BR-FranciscaNeural"),
+        ("Antonio (Male)", "pt-BR-AntonioNeural"),
+    ],
+    "Arabic": [
+        ("Salma (Female)", "ar-SA-ZariyahNeural"),
+        ("Hamed (Male)", "ar-SA-HamedNeural"),
+    ],
+    "Chinese (Mandarin)": [
+        ("Xiaoxiao (Female)", "zh-CN-XiaoxiaoNeural"),
+        ("Yunxi (Male)", "zh-CN-YunxiNeural"),
+    ],
+    "Japanese": [
+        ("Nanami (Female)", "ja-JP-NanamiNeural"),
+        ("Keita (Male)", "ja-JP-KeitaNeural"),
+    ],
+    "Russian": [
+        ("Svetlana (Female)", "ru-RU-SvetlanaNeural"),
+        ("Dmitry (Male)", "ru-RU-DmitryNeural"),
+    ],
 }
 
-# ============================================================
-# TEXT PROCESSING
-# ============================================================
 
 def add_natural_pauses(text):
-    text = re.sub(r'([.!?])\s+', r'\1\n', text)
-    text = re.sub(r'([,:;])\s+', r'\1 ', text)
+    """Insert short breathing pauses so the narration doesn't sound rushed/robotic."""
+    text = re.sub(r'([.!?])\s+', r'\1  ', text)      # slightly longer gap after sentences
+    text = re.sub(r'([,;:])\s+', r'\1  ', text)       # slightly longer gap after clauses
+    text = re.sub(r'\n{2,}', '\n\n... \n\n', text)    # brief breath between paragraphs
     return text
 
 
-def chunk_text(text, max_chars=3500):
-    text = text.strip()
-
-    if len(text) <= max_chars:
-        return [text]
-
-    chunks = []
-    current = ""
-
-    paragraphs = text.split("\n")
-
-    for paragraph in paragraphs:
-
-        if len(current) + len(paragraph) + 1 <= max_chars:
-            current += paragraph + "\n"
-
+def chunk_text(text, max_chars=4000):
+    paragraphs = re.split(r'\n\s*\n', text)
+    chunks, current = [], ""
+    for p in paragraphs:
+        if len(current) + len(p) > max_chars and current:
+            chunks.append(current.strip())
+            current = p
         else:
-            if current.strip():
-                chunks.append(current.strip())
-
-            current = paragraph + "\n"
-
+            current = f"{current}\n\n{p}" if current else p
     if current.strip():
         chunks.append(current.strip())
-
     return chunks
 
 
-# ============================================================
-# TEXT TO SPEECH
-# ============================================================
+def synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses):
+    processed_text = add_natural_pauses(text_content) if natural_pauses else text_content
+    chunks = chunk_text(processed_text)
+    all_audio = b""
 
-async def generate_audio(
-    text,
-    voice,
-    rate,
-    pitch,
-    volume,
-    output_file
-):
+    rate_str = f"{'+' if rate_pct >= 0 else ''}{rate_pct}%"
+    pitch_str = f"{'+' if pitch_pct >= 0 else ''}{pitch_pct}Hz"
+    volume_str = f"{'+' if volume_pct >= 0 else ''}{volume_pct}%"
 
-    communicate = edge_tts.Communicate(
-        text,
-        voice=voice,
-        rate=rate,
-        pitch=pitch,
-        volume=volume
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for i, chunk in enumerate(chunks):
+        status_text.text(f"ðŸ‰ Breathing fire on part {i+1} of {len(chunks)}...")
+
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            communicate = edge_tts.Communicate(
+                chunk, voice,
+                rate=rate_str, pitch=pitch_str, volume=volume_str
+            )
+            asyncio.run(communicate.save(tmp.name))
+
+            with open(tmp.name, "rb") as f:
+                all_audio += f.read()
+            os.unlink(tmp.name)
+
+        progress_bar.progress((i + 1) / len(chunks))
+
+    progress_bar.empty()
+    status_text.empty()
+    return all_audio
+
+
+def render_result(all_audio, source_name):
+    import base64
+    st.balloons()
+    st.success("ðŸ† The Forging is Complete! Your golden audio is ready.")
+
+    b64_audio = base64.b64encode(all_audio).decode()
+    st.markdown("**ðŸŽšï¸ Playback Speed**")
+    st.components.v1.html(f"""
+        <audio id="dragonAudio" controls style="width:100%;">
+            <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
+        </audio>
+        <div style="margin-top:8px;">
+            <button onclick="document.getElementById('dragonAudio').playbackRate=0.75" style="margin-right:6px;padding:6px 10px;">0.75x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.0" style="margin-right:6px;padding:6px 10px;">1x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.25" style="margin-right:6px;padding:6px 10px;">1.25x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.5" style="margin-right:6px;padding:6px 10px;">1.5x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=2.0" style="padding:6px 10px;">2x</button>
+        </div>
+    """, height=110)
+
+    st.download_button(
+        label="â¬‡ï¸ Claim Your MP3 Treasure",
+        data=all_audio,
+        file_name=f"{source_name}_dragon_audio.mp3",
+        mime="audio/mpeg",
+        use_container_width=True
     )
 
-    await communicate.save(output_file)
-
-
-def synthesize(
-    text,
-    source_name,
-    voice,
-    speed,
-    pitch,
-    volume,
-    natural_pauses
-):
-
-    if natural_pauses:
-        text = add_natural_pauses(text)
-
-    chunks = chunk_text(text)
-
-    progress = st.progress(0)
-    status = st.empty()
-
-    temp_files = []
-
-    try:
-
-        for index, chunk in enumerate(chunks):
-
-            status.info(
-                f"🐉 Creating audio... {index + 1}/{len(chunks)}"
-            )
-
-            temp_file = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=".mp3"
-            )
-
-            temp_file.close()
-
-            rate_value = f"{speed:+d}%"
-            pitch_value = f"{pitch:+d}Hz"
-            volume_value = f"{volume:+d}%"
-
-            asyncio.run(
-                generate_audio(
-                    chunk,
-                    voice,
-                    rate_value,
-                    pitch_value,
-                    volume_value,
-                    temp_file.name
-                )
-            )
-
-            temp_files.append(temp_file.name)
-
-            progress.progress(
-                int(((index + 1) / len(chunks)) * 100)
-            )
-
-        # Combine files if there is more than one chunk.
-        final_file = tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=".mp3"
-        )
-
-        final_file.close()
-
-        with open(final_file.name, "wb") as output:
-
-            for file_path in temp_files:
-
-                with open(file_path, "rb") as source:
-                    output.write(source.read())
-
-        status.success("✅ Audio conversion completed!")
-
-        return final_file.name
-
-    except Exception as e:
-
-        status.error(
-            f"❌ Audio generation failed: {str(e)}"
-        )
-
-        return None
-
-    finally:
-
-        for file_path in temp_files:
-
-            try:
-                os.remove(file_path)
-
-            except Exception:
-                pass
-
-
-# ============================================================
-# ADSENSE AD
-# ============================================================
-
-def render_adsense_ad():
-
-    # Don't render a fake/invalid ad unit.
-    if ADSENSE_AD_SLOT == "YOUR_REAL_AD_SLOT_ID":
-        return
-
-    components.html(
-        f"""
-        <!DOCTYPE html>
-
-        <html>
-
-        <head>
-
-            <script async
-                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER_ID}"
-                crossorigin="anonymous">
-            </script>
-
-        </head>
-
-        <body style="margin:0; padding:0;">
-
-            <ins class="adsbygoogle"
-                style="display:block"
-                data-ad-client="{ADSENSE_PUBLISHER_ID}"
-                data-ad-slot="{ADSENSE_AD_SLOT}"
-                data-ad-format="auto"
-                data-full-width-responsive="true">
-            </ins>
-
-            <script>
-                (adsbygoogle = window.adsbygoogle || []).push({{}});
-            </script>
-
-        </body>
-
-        </html>
-        """,
-        height=120
-    )
-
-
-# ============================================================
-# SIDEBAR
-# ============================================================
 
 with st.sidebar:
+    st.header("ðŸ”¥ The Forge Settings")
 
-    st.header("⚙️ Audio Settings")
+    language = st.selectbox("Choose the Dragon's Tongue (Language)", list(LANGUAGE_VOICES.keys()))
 
-    language = st.selectbox(
-        "🌎 Language",
-        list(LANGUAGE_VOICES.keys())
-    )
+    voice_options = LANGUAGE_VOICES[language]
+    voice_labels = [label for label, _ in voice_options]
+    chosen_label = st.selectbox("Choose the Voice of the Dragon", voice_labels)
+    voice = dict(voice_options)[chosen_label]
 
-    voices = LANGUAGE_VOICES[language]
+    st.markdown("#### ðŸŽ™ï¸ Humanize the Voice")
+    rate_pct = st.slider("Speaking Speed", -30, 30, -6, step=2, format="%d%%",
+                          help="Slightly slower than default (around -5% to -10%) tends to sound more natural and less rushed.")
+    pitch_pct = st.slider("Pitch", -20, 20, 0, step=2, format="%dHz",
+                           help="Small shifts (-5 to +5) can add warmth. Large shifts sound robotic.")
+    volume_pct = st.slider("Volume", -30, 30, 0, step=5, format="%d%%")
+    natural_pauses = st.checkbox("Add natural pauses at punctuation", value=True,
+                                  help="Inserts brief breathing pauses after commas and sentence ends, like a real narrator.")
 
-    voice = st.selectbox(
-        "🎙️ Voice",
-        list(voices.keys()),
-        format_func=lambda x: voices[x]
-    )
+    st.info("ðŸ’¡ **Tip:** Split massive novels into chapters under 5,000 words for the fastest forging.")
 
-    speed = st.slider(
-        "⚡ Speed",
-        min_value=-30,
-        max_value=30,
-        value=-6,
-        step=1
-    )
+st.markdown("### ðŸ“œ Offer Your Scroll")
 
-    pitch = st.slider(
-        "🎵 Pitch",
-        min_value=-20,
-        max_value=20,
-        value=0,
-        step=1
-    )
+input_mode = st.radio("How will you offer your words?", ["Upload a .txt file", "Paste text directly"], horizontal=True)
 
-    volume = st.slider(
-        "🔊 Volume",
-        min_value=-30,
-        max_value=30,
-        value=0,
-        step=1
-    )
+if input_mode == "Upload a .txt file":
+    uploaded_file = st.file_uploader("Upload your novel (.txt)", type=["txt"], label_visibility="collapsed")
+    text_content = ""
+    source_name = "dragon_audio"
 
-    natural_pauses = st.checkbox(
-        "⏸️ Natural pauses",
-        value=True
-    )
+    if uploaded_file is not None:
+        text_content = uploaded_file.read().decode("utf-8")
+        source_name = uploaded_file.name.rsplit('.', 1)[0]
+        st.success(f"âœ… Scroll Accepted: '{uploaded_file.name}' ({len(text_content):,} characters)")
 
-
-# ============================================================
-# INPUT
-# ============================================================
-
-st.markdown(
-    '<div class="dragon-card">',
-    unsafe_allow_html=True
-)
-
-input_mode = st.radio(
-    "Choose input method",
-    ["📄 Upload TXT", "✍️ Paste Text"],
-    horizontal=True
-)
-
-text_content = ""
-source_name = "Dragon Audio"
-
-if input_mode == "📄 Upload TXT":
-
-    uploaded_file = st.file_uploader(
-        "Upload your TXT file",
-        type=["txt"]
-    )
-
-    if uploaded_file:
-
-        try:
-
-            text_content = uploaded_file.read().decode(
-                "utf-8",
-                errors="ignore"
-            )
-
-            source_name = os.path.splitext(
-                uploaded_file.name
-            )[0]
-
-            st.success(
-                f"📖 Loaded: {uploaded_file.name}"
-            )
-
-        except Exception as e:
-
-            st.error(
-                f"Could not read file: {e}"
-            )
+    if text_content.strip():
+        if st.button("ðŸ”¥ Ignite the Forge (Convert to MP3)", type="primary", use_container_width=True, key="ignite_file"):
+            try:
+                audio = synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses)
+                render_result(audio, source_name)
+            except Exception as e:
+                st.error(f"âŒ The fire died out. Error: {str(e)}")
+    else:
+        st.info("ðŸ‘† Upload a scroll to begin.")
 
 else:
-
     text_content = st.text_area(
         "Paste your text here",
-        height=300,
-        placeholder="Paste your novel, story, article or any text here..."
+        height=250,
+        placeholder="Speak your words into the fire...",
+        label_visibility="collapsed",
     )
+    source_name = "pasted_text"
 
-st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ============================================================
-# CONVERT BUTTON
-# ============================================================
-
-if st.button(
-    "🐉 Convert to MP3",
-    type="primary",
-    use_container_width=True
-):
-
-    if not text_content.strip():
-
-        st.warning(
-            "⚠️ Please upload a TXT file or paste some text first."
-        )
-
-    else:
-
-        audio_file = synthesize(
-            text_content,
-            source_name,
-            voice,
-            speed,
-            pitch,
-            volume,
-            natural_pauses
-        )
-
-        if audio_file:
-
-            # =================================================
-            # RESULT
-            # =================================================
-
-            st.markdown(
-                '<div class="dragon-card">',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                '<div class="result-title">🎧 Your Dragon Audio</div>',
-                unsafe_allow_html=True
-            )
-
-            # Audio player
-            with open(audio_file, "rb") as audio:
-
-                audio_bytes = audio.read()
-
-            st.audio(
-                audio_bytes,
-                format="audio/mp3"
-            )
-
-            # Download
-            download_name = re.sub(
-                r'[\\/:*?"<>|]+',
-                "_",
-                source_name
-            )
-
-            st.download_button(
-                "⬇️ Download MP3",
-                data=audio_bytes,
-                file_name=f"{download_name}.mp3",
-                mime="audio/mpeg",
-                use_container_width=True
-            )
-
-            st.markdown(
-                "</div>",
-                unsafe_allow_html=True
-            )
-
-            # =================================================
-            # ADSENSE
-            # =================================================
-
-            render_adsense_ad()
-
-            # =================================================
-            # CLEANUP
-            # =================================================
-
+    if text_content.strip():
+        st.success(f"âœ… Words Accepted ({len(text_content):,} characters)")
+        if st.button("ðŸ”¥ Ignite the Forge (Convert to MP3)", type="primary", use_container_width=True, key="ignite_text"):
             try:
-                os.remove(audio_file)
-
-            except Exception:
-                pass
-
-
-# ============================================================
-# FOOTER
-# ============================================================
-
-st.markdown(
-    """
-    <div style="
-        text-align:center;
-        color:#8f849e;
-        font-size:13px;
-        padding:25px 0;
-    ">
-        🐉 The Dragon Audio Converts
-        <br>
-        Turn your words into sound.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+                audio = synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses)
+                render_result(audio, source_name)
+            except Exception as e:
+                st.error(f"âŒ The fire died out. Error: {str(e)}")
+    else:
+        st.info("ðŸ‘† Paste your text above to begin.")
