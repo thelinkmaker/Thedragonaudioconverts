@@ -8,8 +8,7 @@ import re
 # 1. Page Configuration
 st.set_page_config(page_title="The Dragon Audio Converts", page_icon="🐉", layout="centered")
 
-# 2. GOOGLE ADSENSE CODE INJECTION
-# This injects the script into the <head> of the page
+# 2. GOOGLE ADSENSE CODE INJECTION (Fixes Verification Error)
 ADSENSE_SCRIPT = """
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9856228284451388"
      crossorigin="anonymous"></script>
@@ -43,79 +42,79 @@ st.markdown("---")
 
 # Language -> list of (display_name, voice_id)
 LANGUAGE_VOICES = {
- "English (US)": [
-    ("Aria (Female)", "en-US-AriaNeural"),
-    ("Guy (Male)", "en-US-GuyNeural"),
-    ("Jenny (Female)", "en-US-JennyNeural"),
-    ("Christopher (Male)", "en-US-ChristopherNeural"),
- ],
- "English (UK)": [
-    ("Sonia (Female)", "en-GB-SoniaNeural"),
-    ("Ryan (Male)", "en-GB-RyanNeural"),
- ],
- "English (Australia)": [
-    ("Natasha (Female)", "en-AU-NatashaNeural"),
-    ("William (Male)", "en-AU-WilliamNeural"),
- ],
- "English (India)": [
-    ("Neerja (Female)", "en-IN-NeerjaNeural"),
-    ("Prabhat (Male)", "en-IN-PrabhatNeural"),
- ],
- "Hindi": [
-    ("Swara (Female)", "hi-IN-SwaraNeural"),
-    ("Madhur (Male)", "hi-IN-MadhurNeural"),
- ],
- "Urdu": [
-    ("Uzma (Female)", "ur-PK-UzmaNeural"),
-    ("Asad (Male)", "ur-PK-AsadNeural"),
- ],
- "Spanish (Spain)": [
-    ("Elvira (Female)", "es-ES-ElviraNeural"),
-    ("Alvaro (Male)", "es-ES-AlvaroNeural"),
- ],
- "Spanish (Mexico)": [
-    ("Dalia (Female)", "es-MX-DaliaNeural"),
-    ("Jorge (Male)", "es-MX-JorgeNeural"),
- ],
- "French": [
-    ("Denise (Female)", "fr-FR-DeniseNeural"),
-    ("Henri (Male)", "fr-FR-HenriNeural"),
- ],
- "German": [
-    ("Katja (Female)", "de-DE-KatjaNeural"),
-    ("Conrad (Male)", "de-DE-ConradNeural"),
- ],
- "Italian": [
-    ("Elsa (Female)", "it-IT-ElsaNeural"),
-    ("Diego (Male)", "it-IT-DiegoNeural"),
- ],
- "Portuguese (Brazil)": [
-    ("Francisca (Female)", "pt-BR-FranciscaNeural"),
-    ("Antonio (Male)", "pt-BR-AntonioNeural"),
- ],
- "Arabic": [
-    ("Salma (Female)", "ar-SA-ZariyahNeural"),
-    ("Hamed (Male)", "ar-SA-HamedNeural"),
- ],
- "Chinese (Mandarin)": [
-    ("Xiaoxiao (Female)", "zh-CN-XiaoxiaoNeural"),
-    ("Yunxi (Male)", "zh-CN-YunxiNeural"),
- ],
- "Japanese": [
-    ("Nanami (Female)", "ja-JP-NanamiNeural"),
-    ("Keita (Male)", "ja-JP-KeitaNeural"),
- ],
- "Russian": [
-    ("Svetlana (Female)", "ru-RU-SvetlanaNeural"),
-    ("Dmitry (Male)", "ru-RU-DmitryNeural"),
- ],
+    "English (US)": [
+        ("Aria (Female)", "en-US-AriaNeural"),
+        ("Guy (Male)", "en-US-GuyNeural"),
+        ("Jenny (Female)", "en-US-JennyNeural"),
+        ("Christopher (Male)", "en-US-ChristopherNeural"),
+    ],
+    "English (UK)": [
+        ("Sonia (Female)", "en-GB-SoniaNeural"),
+        ("Ryan (Male)", "en-GB-RyanNeural"),
+    ],
+    "English (Australia)": [
+        ("Natasha (Female)", "en-AU-NatashaNeural"),
+        ("William (Male)", "en-AU-WilliamNeural"),
+    ],
+    "English (India)": [
+        ("Neerja (Female)", "en-IN-NeerjaNeural"),
+        ("Prabhat (Male)", "en-IN-PrabhatNeural"),
+    ],
+    "Hindi": [
+        ("Swara (Female)", "hi-IN-SwaraNeural"),
+        ("Madhur (Male)", "hi-IN-MadhurNeural"),
+    ],
+    "Urdu": [
+        ("Uzma (Female)", "ur-PK-UzmaNeural"),
+        ("Asad (Male)", "ur-PK-AsadNeural"),
+    ],
+    "Spanish (Spain)": [
+        ("Elvira (Female)", "es-ES-ElviraNeural"),
+        ("Alvaro (Male)", "es-ES-AlvaroNeural"),
+    ],
+    "Spanish (Mexico)": [
+        ("Dalia (Female)", "es-MX-DaliaNeural"),
+        ("Jorge (Male)", "es-MX-JorgeNeural"),
+    ],
+    "French": [
+        ("Denise (Female)", "fr-FR-DeniseNeural"),
+        ("Henri (Male)", "fr-FR-HenriNeural"),
+    ],
+    "German": [
+        ("Katja (Female)", "de-DE-KatjaNeural"),
+        ("Conrad (Male)", "de-DE-ConradNeural"),
+    ],
+    "Italian": [
+        ("Elsa (Female)", "it-IT-ElsaNeural"),
+        ("Diego (Male)", "it-IT-DiegoNeural"),
+    ],
+    "Portuguese (Brazil)": [
+        ("Francisca (Female)", "pt-BR-FranciscaNeural"),
+        ("Antonio (Male)", "pt-BR-AntonioNeural"),
+    ],
+    "Arabic": [
+        ("Salma (Female)", "ar-SA-ZariyahNeural"),
+        ("Hamed (Male)", "ar-SA-HamedNeural"),
+    ],
+    "Chinese (Mandarin)": [
+        ("Xiaoxiao (Female)", "zh-CN-XiaoxiaoNeural"),
+        ("Yunxi (Male)", "zh-CN-YunxiNeural"),
+    ],
+    "Japanese": [
+        ("Nanami (Female)", "ja-JP-NanamiNeural"),
+        ("Keita (Male)", "ja-JP-KeitaNeural"),
+    ],
+    "Russian": [
+        ("Svetlana (Female)", "ru-RU-SvetlanaNeural"),
+        ("Dmitry (Male)", "ru-RU-DmitryNeural"),
+    ],
 }
 
 def add_natural_pauses(text):
     """Insert short breathing pauses so the narration doesn't sound rushed/robotic."""
-    text = re.sub(r'([.!?])\s+', r'\1  ', text)      # slightly longer gap after sentences
-    text = re.sub(r'([,;:])\s+', r'\1  ', text)       # slightly longer gap after clauses
-    text = re.sub(r'\n{2,}', '\n\n... \n\n', text)    # brief breath between paragraphs
+    text = re.sub(r'([.!?])\s+', r'\1  ', text)
+    text = re.sub(r'([,;:])\s+', r'\1  ', text)
+    text = re.sub(r'\n{2,}', '\n\n... \n\n', text)
     return text
 
 def chunk_text(text, max_chars=4000):
@@ -226,7 +225,7 @@ if input_mode == "Upload a .txt file":
             except Exception as e:
                 st.error(f"❌ The fire died out. Error: {str(e)}")
     else:
-        st.info("👆 Upload a scroll to begin.")
+        st.info(" Upload a scroll to begin.")
 else:
     text_content = st.text_area(
         "Paste your text here",
@@ -245,3 +244,16 @@ else:
                 st.error(f"❌ The fire died out. Error: {str(e)}")
     else:
         st.info("👆 Paste your text above to begin.")
+
+# 4. PRIVACY POLICY (Required for AdSense Approval)
+st.markdown("---")
+with st.expander("📜 Privacy Policy & Terms of Use"):
+    st.markdown("""
+    **Privacy Policy:** This website uses Google AdSense to display advertisements. 
+    Google may use cookies to serve ads based on prior visits to this or other websites. 
+    Users can opt out of personalized advertising by visiting [Google Ads Settings](https://adssettings.google.com).
+    
+    **Terms of Use:** This tool is provided as-is for text-to-speech conversion using Microsoft Edge TTS. 
+    Generated audio should comply with applicable copyright laws and Microsoft's terms of service.
+    Do not use generated audio for illegal or harmful purposes.
+    """)
