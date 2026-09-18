@@ -13,6 +13,24 @@ st.set_page_config(
 )
 
 # ============================================================
+# GOOGLE ADSENSE
+# ============================================================
+# Google AdSense publisher ID
+ADSENSE_PUBLISHER_ID = "ca-pub-9856228284451388"
+
+# Load AdSense script
+st.markdown(
+    f"""
+    <script async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=985622828445"
+        crossorigin="anonymous">
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
 # CUSTOM DRAGON THEME
 # ============================================================
 st.markdown("""
@@ -133,10 +151,16 @@ section[data-testid="stSidebar"] {
     border: 1px solid #ff4500;
 }
 
-/* Monetag ad spacing */
 .dragon-ad-space {
     margin: 20px 0;
     min-height: 10px;
+}
+
+.adsense-container {
+    width: 100%;
+    min-height: 100px;
+    margin: 20px 0;
+    text-align: center;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -342,7 +366,35 @@ def synthesize(
 
 
 # ============================================================
-# RESULT + MONETAG PLACEHOLDER
+# ADSENSE AD
+# ============================================================
+def render_adsense_ad():
+
+    components.html(
+        f"""
+        <script async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER_ID}"
+            crossorigin="anonymous">
+        </script>
+
+        <ins class="adsbygoogle"
+            style="display:block"
+            data-ad-client="{ADSENSE_PUBLISHER_ID}"
+            data-ad-slot="YOUR_AD_SLOT_ID"
+            data-ad-format="auto"
+            data-full-width-responsive="true">
+        </ins>
+
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({{}});
+        </script>
+        """,
+        height=120
+    )
+
+
+# ============================================================
+# RESULT
 # ============================================================
 def render_result(all_audio, source_name):
 
@@ -410,7 +462,7 @@ def render_result(all_audio, source_name):
     )
 
     # --------------------------------------------------------
-    # MONETAG AD LOCATION
+    # ADSENSE AD AREA
     # --------------------------------------------------------
     st.markdown(
         """
@@ -418,12 +470,6 @@ def render_result(all_audio, source_name):
         """,
         unsafe_allow_html=True
     )
-
-    # ========================================================
-    # IMPORTANT:
-    # PUT YOUR ACTUAL MONETAG AD SCRIPT HERE
-    # AFTER MONETAG GIVES YOU A ZONE SCRIPT.
-    # ========================================================
 
     # --------------------------------------------------------
     # DOWNLOAD BUTTON
@@ -628,7 +674,7 @@ else:
 
                 audio = synthesize(
                     text_content,
-                    source_name,
+         2           source_name,
                     voice,
                     rate_pct,
                     pitch_pct,
@@ -651,4 +697,4 @@ else:
 
         st.info(
             "👆 Paste your text above to begin."
-    )
+)
