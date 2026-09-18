@@ -13,21 +13,6 @@ st.set_page_config(
 )
 
 # ============================================================
-# MONETAG SITE VERIFICATION
-# ============================================================
-components.html("""
-<script>
-(function() {
-    var meta = document.createElement("meta");
-    meta.name = "monetag";
-    meta.content = "d80d3c02aee02551207039c9200f3f6";
-    document.head.appendChild(meta);
-})();
-</script>
-""", height=0)
-
-
-# ============================================================
 # CUSTOM DRAGON THEME
 # ============================================================
 st.markdown("""
