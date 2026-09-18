@@ -250,4 +250,3 @@ else:
                 st.error(f"❌ The fire died out. Error: {str(e)}")
     else:
         st.info("👆 Paste your text above to begin.")
-        
