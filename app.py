@@ -8,7 +8,7 @@ import re
 # 1. Page Configuration
 st.set_page_config(page_title="The Dragon Audio Converts", page_icon="🐉", layout="centered")
 
-# 2. MONETAG VERIFICATION META TAG
+# 2. MONETAG VERIFICATION META TAG (Injects into <head>)
 st.markdown('<meta name="monetag" content="d80d3c02aee02551207039c9200f3f6a">', unsafe_allow_html=True)
 
 # 3. Custom CSS Styles
