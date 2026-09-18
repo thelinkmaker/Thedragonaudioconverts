@@ -18,4 +18,4 @@ def inject_meta_tag():
         print("ℹ️ Monetag tag already present.")
 
 if __name__ == "__main__":
-    inject_meta_tag()2
+    inject_meta_tag()
