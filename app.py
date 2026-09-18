@@ -8,16 +8,12 @@ import re
 # 1. Page Configuration
 st.set_page_config(page_title="The Dragon Audio Converts", page_icon="🐉", layout="centered")
 
-# 2. GOOGLE ADSENSE CODE INJECTION (Fixes Verification Error)
-ADSENSE_SCRIPT = """
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9856228284451388"
-     crossorigin="anonymous"></script>
-"""
-st.markdown(ADSENSE_SCRIPT, unsafe_allow_html=True)
+# 2. MONETAG VERIFICATION META TAG
+st.markdown('<meta name="monetag" content="d80d3c02aee02551207039c9200f3f6a">', unsafe_allow_html=True)
 
 # 3. Custom CSS Styles
 st.markdown("""
-<style >
+<style>
 .stApp { background: linear-gradient(160deg, #0a0000 0%, #1a0505 40%, #0d0000 100%); color: #ffcc00; }
 h1 { color: #ff4500 !important; text-shadow: 0 0 15px #ff0000, 0 0 30px #8b0000; text-align: center; font-family: 'Georgia', serif; letter-spacing: 2px; }
 h2, h3 { color: #ff8c00 !important; font-family: 'Georgia', serif; }
@@ -36,7 +32,7 @@ section[data-testid="stSidebar"] { background: linear-gradient(180deg, #110000 0
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🐉 The Dragon Audio Converts")
+st.title(" The Dragon Audio Converts")
 st.markdown("<h3 style='text-align: center; color: #ff8c00;'>Forge your text into golden audio. Unleash the fire of AI voices.</h3>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -187,14 +183,14 @@ def render_result(all_audio, source_name):
     )
 
 with st.sidebar:
-    st.header("🔥 The Forge Settings")
+    st.header(" The Forge Settings")
     language = st.selectbox("Choose the Dragon's Tongue (Language)", list(LANGUAGE_VOICES.keys()))
     voice_options = LANGUAGE_VOICES[language]
     voice_labels = [label for label, _ in voice_options]
     chosen_label = st.selectbox("Choose the Voice of the Dragon", voice_labels)
     voice = dict(voice_options)[chosen_label]
     
-    st.markdown("#### 🎙️ Humanize the Voice")
+    st.markdown("#### ️ Humanize the Voice")
     rate_pct = st.slider("Speaking Speed", -30, 30, -6, step=2, format="%d%%",
                           help="Slightly slower than default (around -5% to -10%) tends to sound more natural and less rushed.")
     pitch_pct = st.slider("Pitch", -20, 20, 0, step=2, format="%dHz",
@@ -223,7 +219,7 @@ if input_mode == "Upload a .txt file":
                 audio = synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses)
                 render_result(audio, source_name)
             except Exception as e:
-                st.error(f"❌ The fire died out. Error: {str(e)}")
+                st.error(f" The fire died out. Error: {str(e)}")
     else:
         st.info(" Upload a scroll to begin.")
 else:
@@ -245,15 +241,14 @@ else:
     else:
         st.info("👆 Paste your text above to begin.")
 
-# 4. PRIVACY POLICY (Required for AdSense Approval)
+# Privacy Policy (Required for Ad Networks)
 st.markdown("---")
 with st.expander("📜 Privacy Policy & Terms of Use"):
     st.markdown("""
-    **Privacy Policy:** This website uses Google AdSense to display advertisements. 
-    Google may use cookies to serve ads based on prior visits to this or other websites. 
-    Users can opt out of personalized advertising by visiting [Google Ads Settings](https://adssettings.google.com).
+    **Privacy Policy:** This website uses Monetag to display advertisements. 
+    Third-party vendors may use cookies to serve ads based on prior visits. 
+    Users can opt out of personalized advertising by visiting their browser settings.
     
-    **Terms of Use:** This tool is provided as-is for text-to-speech conversion using Microsoft Edge TTS. 
-    Generated audio should comply with applicable copyright laws and Microsoft's terms of service.
-    Do not use generated audio for illegal or harmful purposes.
+    **Terms of Use:** This tool is provided as-is for text-to-speech conversion. 
+    Generated audio should comply with applicable copyright laws.
     """)
