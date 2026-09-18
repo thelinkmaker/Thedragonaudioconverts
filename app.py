@@ -102,6 +102,14 @@ LANGUAGE_VOICES = {
 }
 
 
+def add_natural_pauses(text):
+    """Insert short breathing pauses so the narration doesn't sound rushed/robotic."""
+    text = re.sub(r'([.!?])\s+', r'\1  ', text)      # slightly longer gap after sentences
+    text = re.sub(r'([,;:])\s+', r'\1  ', text)       # slightly longer gap after clauses
+    text = re.sub(r'\n{2,}', '\n\n... \n\n', text)    # brief breath between paragraphs
+    return text
+
+
 def chunk_text(text, max_chars=4000):
     paragraphs = re.split(r'\n\s*\n', text)
     chunks, current = [], ""
@@ -116,6 +124,68 @@ def chunk_text(text, max_chars=4000):
     return chunks
 
 
+def synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses):
+    processed_text = add_natural_pauses(text_content) if natural_pauses else text_content
+    chunks = chunk_text(processed_text)
+    all_audio = b""
+
+    rate_str = f"{'+' if rate_pct >= 0 else ''}{rate_pct}%"
+    pitch_str = f"{'+' if pitch_pct >= 0 else ''}{pitch_pct}Hz"
+    volume_str = f"{'+' if volume_pct >= 0 else ''}{volume_pct}%"
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for i, chunk in enumerate(chunks):
+        status_text.text(f"🐉 Breathing fire on part {i+1} of {len(chunks)}...")
+
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            communicate = edge_tts.Communicate(
+                chunk, voice,
+                rate=rate_str, pitch=pitch_str, volume=volume_str
+            )
+            asyncio.run(communicate.save(tmp.name))
+
+            with open(tmp.name, "rb") as f:
+                all_audio += f.read()
+            os.unlink(tmp.name)
+
+        progress_bar.progress((i + 1) / len(chunks))
+
+    progress_bar.empty()
+    status_text.empty()
+    return all_audio
+
+
+def render_result(all_audio, source_name):
+    import base64
+    st.balloons()
+    st.success("🏆 The Forging is Complete! Your golden audio is ready.")
+
+    b64_audio = base64.b64encode(all_audio).decode()
+    st.markdown("**🎚️ Playback Speed**")
+    st.components.v1.html(f"""
+        <audio id="dragonAudio" controls style="width:100%;">
+            <source src="data:audio/mp3;base64,{b64_audio}" type="audio/mp3">
+        </audio>
+        <div style="margin-top:8px;">
+            <button onclick="document.getElementById('dragonAudio').playbackRate=0.75" style="margin-right:6px;padding:6px 10px;">0.75x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.0" style="margin-right:6px;padding:6px 10px;">1x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.25" style="margin-right:6px;padding:6px 10px;">1.25x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=1.5" style="margin-right:6px;padding:6px 10px;">1.5x</button>
+            <button onclick="document.getElementById('dragonAudio').playbackRate=2.0" style="padding:6px 10px;">2x</button>
+        </div>
+    """, height=110)
+
+    st.download_button(
+        label="⬇️ Claim Your MP3 Treasure",
+        data=all_audio,
+        file_name=f"{source_name}_dragon_audio.mp3",
+        mime="audio/mpeg",
+        use_container_width=True
+    )
+
+
 with st.sidebar:
     st.header("🔥 The Forge Settings")
 
@@ -126,21 +196,41 @@ with st.sidebar:
     chosen_label = st.selectbox("Choose the Voice of the Dragon", voice_labels)
     voice = dict(voice_options)[chosen_label]
 
+    st.markdown("#### 🎙️ Humanize the Voice")
+    rate_pct = st.slider("Speaking Speed", -30, 30, -6, step=2, format="%d%%",
+                          help="Slightly slower than default (around -5% to -10%) tends to sound more natural and less rushed.")
+    pitch_pct = st.slider("Pitch", -20, 20, 0, step=2, format="%dHz",
+                           help="Small shifts (-5 to +5) can add warmth. Large shifts sound robotic.")
+    volume_pct = st.slider("Volume", -30, 30, 0, step=5, format="%d%%")
+    natural_pauses = st.checkbox("Add natural pauses at punctuation", value=True,
+                                  help="Inserts brief breathing pauses after commas and sentence ends, like a real narrator.")
+
     st.info("💡 **Tip:** Split massive novels into chapters under 5,000 words for the fastest forging.")
 
 st.markdown("### 📜 Offer Your Scroll")
 
 input_mode = st.radio("How will you offer your words?", ["Upload a .txt file", "Paste text directly"], horizontal=True)
 
-text_content = ""
-source_name = "dragon_audio"
-
 if input_mode == "Upload a .txt file":
     uploaded_file = st.file_uploader("Upload your novel (.txt)", type=["txt"], label_visibility="collapsed")
+    text_content = ""
+    source_name = "dragon_audio"
+
     if uploaded_file is not None:
         text_content = uploaded_file.read().decode("utf-8")
         source_name = uploaded_file.name.rsplit('.', 1)[0]
         st.success(f"✅ Scroll Accepted: '{uploaded_file.name}' ({len(text_content):,} characters)")
+
+    if text_content.strip():
+        if st.button("🔥 Ignite the Forge (Convert to MP3)", type="primary", use_container_width=True, key="ignite_file"):
+            try:
+                audio = synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses)
+                render_result(audio, source_name)
+            except Exception as e:
+                st.error(f"❌ The fire died out. Error: {str(e)}")
+    else:
+        st.info("👆 Upload a scroll to begin.")
+
 else:
     text_content = st.text_area(
         "Paste your text here",
@@ -148,49 +238,16 @@ else:
         placeholder="Speak your words into the fire...",
         label_visibility="collapsed",
     )
+    source_name = "pasted_text"
+
     if text_content.strip():
         st.success(f"✅ Words Accepted ({len(text_content):,} characters)")
-        source_name = "pasted_text"
-
-if text_content.strip():
-    if st.button("🔥 Ignite the Forge (Convert to MP3)", type="primary", use_container_width=True):
-        try:
-            chunks = chunk_text(text_content)
-            all_audio = b""
-
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            for i, chunk in enumerate(chunks):
-                status_text.text(f"🐉 Breathing fire on part {i+1} of {len(chunks)}...")
-
-                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
-                    communicate = edge_tts.Communicate(chunk, voice)
-                    asyncio.run(communicate.save(tmp.name))
-
-                    with open(tmp.name, "rb") as f:
-                        all_audio += f.read()
-                    os.unlink(tmp.name)
-
-                progress_bar.progress((i + 1) / len(chunks))
-
-            progress_bar.empty()
-            status_text.empty()
-
-            st.balloons()
-            st.success("🏆 The Forging is Complete! Your golden audio is ready.")
-
-            st.audio(all_audio, format="audio/mp3")
-            st.download_button(
-                label="⬇️ Claim Your MP3 Treasure",
-                data=all_audio,
-                file_name=f"{source_name}_dragon_audio.mp3",
-                mime="audio/mpeg",
-                use_container_width=True
-            )
-
-        except Exception as e:
-            st.error(f"❌ The fire died out. Error: {str(e)}")
-else:
-    st.info("👆 Upload a scroll or paste your text above to begin.")
-    
+        if st.button("🔥 Ignite the Forge (Convert to MP3)", type="primary", use_container_width=True, key="ignite_text"):
+            try:
+                audio = synthesize(text_content, source_name, voice, rate_pct, pitch_pct, volume_pct, natural_pauses)
+                render_result(audio, source_name)
+            except Exception as e:
+                st.error(f"❌ The fire died out. Error: {str(e)}")
+    else:
+        st.info("👆 Paste your text above to begin.")
+        
