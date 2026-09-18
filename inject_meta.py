@@ -2,7 +2,7 @@ import os
 import streamlit as st
 
 MONETAG_META = '<meta name="monetag" content="d80d3c02aee02551207039c9200f3f6a">'
-MONETAG_SCRIPT = '<script src="https://quge5.com/88/tag.min.js" data-zone="282833" async data-cfasync="false"></script>'
+MONETAG_SCRIPT = '<script src="https://quge5.com/88/tag.min.js" data-zone="282837" async data-cfasync="false"></script>'
 
 SW_CONTENT = '''self.options = {
     "domain": "5gvci.com",
